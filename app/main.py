@@ -1,4 +1,5 @@
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -8,11 +9,26 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.database import get_connection, init_db
 
 
+# Configure application logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
+
 # Initialize database when application starts
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Starting CloudOps application")
+
     init_db()
+    logger.info("Database initialized successfully")
+
     yield
+
+    logger.info("Shutting down CloudOps application")
 
 
 # Create FastAPI application
@@ -41,6 +57,8 @@ class TaskUpdate(BaseModel):
 # Welcome endpoint
 @app.get("/")
 def home():
+    logger.info("Welcome endpoint accessed")
+
     return {
         "message": "Welcome to CloudOps Task Management API",
         "status": "running"
@@ -50,6 +68,8 @@ def home():
 # Health check endpoint
 @app.get("/health")
 def health_check():
+    logger.info("Health check requested")
+
     return {
         "status": "healthy"
     }
@@ -58,6 +78,8 @@ def health_check():
 # Get all tasks
 @app.get("/tasks")
 def get_tasks():
+    logger.info("Retrieving all tasks")
+
     connection = get_connection()
 
     tasks = connection.execute(
@@ -66,12 +88,16 @@ def get_tasks():
 
     connection.close()
 
+    logger.info("Successfully retrieved %s tasks", len(tasks))
+
     return [dict(task) for task in tasks]
 
 
 # Get one task by ID
 @app.get("/tasks/{task_id}")
 def get_task(task_id: int):
+    logger.info("Retrieving task ID: %s", task_id)
+
     connection = get_connection()
 
     task = connection.execute(
@@ -82,10 +108,14 @@ def get_task(task_id: int):
     connection.close()
 
     if task is None:
+        logger.error("Task not found: %s", task_id)
+
         raise HTTPException(
             status_code=404,
             detail="Task not found"
         )
+
+    logger.info("Task retrieved successfully: %s", task_id)
 
     return dict(task)
 
@@ -93,6 +123,8 @@ def get_task(task_id: int):
 # Create a new task
 @app.post("/tasks", status_code=201)
 def create_task(task: TaskCreate):
+    logger.info("Creating a new task")
+
     connection = get_connection()
 
     cursor = connection.execute(
@@ -114,12 +146,16 @@ def create_task(task: TaskCreate):
 
     connection.close()
 
+    logger.info("Task created successfully. ID: %s", task_id)
+
     return dict(new_task)
 
 
 # Update an existing task
 @app.put("/tasks/{task_id}")
 def update_task(task_id: int, task: TaskUpdate):
+    logger.info("Updating task ID: %s", task_id)
+
     connection = get_connection()
 
     existing_task = connection.execute(
@@ -129,6 +165,8 @@ def update_task(task_id: int, task: TaskUpdate):
 
     if existing_task is None:
         connection.close()
+
+        logger.error("Cannot update. Task not found: %s", task_id)
 
         raise HTTPException(
             status_code=404,
@@ -153,12 +191,16 @@ def update_task(task_id: int, task: TaskUpdate):
 
     connection.close()
 
+    logger.info("Task updated successfully: %s", task_id)
+
     return dict(updated_task)
 
 
 # Delete a task
 @app.delete("/tasks/{task_id}")
 def delete_task(task_id: int):
+    logger.info("Deleting task ID: %s", task_id)
+
     connection = get_connection()
 
     existing_task = connection.execute(
@@ -168,6 +210,8 @@ def delete_task(task_id: int):
 
     if existing_task is None:
         connection.close()
+
+        logger.error("Cannot delete. Task not found: %s", task_id)
 
         raise HTTPException(
             status_code=404,
@@ -181,6 +225,8 @@ def delete_task(task_id: int):
 
     connection.commit()
     connection.close()
+
+    logger.info("Task deleted successfully: %s", task_id)
 
     return {
         "message": "Task deleted successfully"
