@@ -1,0 +1,39 @@
+
+services:
+
+  api:
+    build: .
+    container_name: cloudops-api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_PATH: /app/data/tasks.db
+    volumes:
+      - task-data:/app/data
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cloudops-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cloudops-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: cloudops-local-demo
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  task-data:
