@@ -115,3 +115,43 @@ def test_task_not_found(client):
     response = client.get("/tasks/999")
 
     assert response.status_code == 404
+
+
+def test_get_task(client):
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "Test task",
+            "description": "Testing get task",
+            "completed": False
+        }
+    )
+
+    task_id = create_response.json()["id"]
+
+    response = client.get(f"/tasks/{task_id}")
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Test task"
+
+
+def test_update_task_not_found(client):
+    response = client.put(
+        "/tasks/999",
+        json={
+            "title": "Updated task",
+            "description": "Testing missing task",
+            "completed": True
+        }
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Task not found"
+
+
+def test_delete_task_not_found(client):
+    response = client.delete("/tasks/999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Task not found"
+

@@ -1,5 +1,6 @@
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -9,9 +10,13 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.database import get_connection, init_db
 
 
+# Read application configuration from environment variables
+APP_ENV = os.getenv("APP_ENV", "development")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
 # Configure application logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
@@ -22,6 +27,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting CloudOps application")
+    logger.info("Application environment: %s", APP_ENV)
 
     init_db()
     logger.info("Database initialized successfully")

@@ -8,6 +8,8 @@ services:
       - "8000:8000"
     environment:
       DATABASE_PATH: /app/data/tasks.db
+      APP_ENV: production
+      LOG_LEVEL: INFO
     volumes:
       - task-data:/app/data
     restart: unless-stopped
