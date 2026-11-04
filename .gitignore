@@ -13,3 +13,7 @@ htmlcov/
 
 # Local security scan report
 trivy-report.json
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
