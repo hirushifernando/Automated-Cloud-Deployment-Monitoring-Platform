@@ -1,4 +1,3 @@
-
 # AWS account information
 data "aws_caller_identity" "current" {}
 
@@ -7,7 +6,6 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# Find the existing CloudOps ECR repository
 # Manage the existing CloudOps ECR repository
 resource "aws_ecr_repository" "cloudops" {
   name                 = "cloudops-api"
@@ -25,16 +23,19 @@ resource "aws_ecr_repository" "cloudops" {
     prevent_destroy = true
   }
 }
+
 # Find the existing CloudOps EC2 instance
 data "aws_instance" "cloudops" {
   instance_id = "i-0eba8e81414603f38"
 }
+
 # Manage the existing CloudOps security group
 resource "aws_security_group" "cloudops" {
   name        = "CloudOpsSecurityGroup"
   description = "Security group for CloudOps EC2 deployment"
   vpc_id      = "vpc-05b83c4c89de50ec3"
 
+  # FastAPI access
   ingress {
     description = "CloudOps FastAPI access"
     from_port   = 8000
@@ -43,7 +44,8 @@ resource "aws_security_group" "cloudops" {
     cidr_blocks = ["112.134.158.103/32"]
   }
 
-   ingress {
+  # SSH administration
+  ingress {
     description = "SSH administration"
     from_port   = 22
     to_port     = 22
@@ -51,14 +53,15 @@ resource "aws_security_group" "cloudops" {
     cidr_blocks = ["112.134.158.103/32"]
   }
 
+  # AWS EC2 Instance Connect
   ingress {
-    description     = "EC2 Instance Connect"
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
     prefix_list_ids = ["pl-0e1bc5673b8a57acc"]
   }
 
+  # Allow outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -74,6 +77,7 @@ resource "aws_security_group" "cloudops" {
     Project = "CloudOps"
   }
 }
+
 # Find the existing CloudOps EC2 IAM role
 data "aws_iam_role" "cloudops" {
   name = "CloudOpsEC2Role"
