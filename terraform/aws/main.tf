@@ -1,3 +1,4 @@
+
 # AWS account information
 data "aws_caller_identity" "current" {}
 
@@ -24,9 +25,42 @@ resource "aws_ecr_repository" "cloudops" {
   }
 }
 
-# Find the existing CloudOps EC2 instance
-data "aws_instance" "cloudops" {
-  instance_id = "i-0eba8e81414603f38"
+# Manage the existing CloudOps EC2 instance
+resource "aws_instance" "cloudops" {
+  ami                  = "ami-062900c135ab91582"
+  instance_type        = "t3.micro"
+  subnet_id             = "subnet-024cee613b9f4bc73"
+  vpc_security_group_ids = [aws_security_group.cloudops.id]
+  key_name              = "CloudOps-EC2-Key"
+  iam_instance_profile  = "CloudOpsEC2Role"
+
+  monitoring    = false
+  ebs_optimized = true
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+    http_protocol_ipv6          = "disabled"
+    instance_metadata_tags      = "disabled"
+  }
+
+  root_block_device {
+    volume_size           = 8
+    volume_type           = "gp3"
+    encrypted             = true
+    iops                  = 3000
+    throughput            = 125
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name = "CloudOps-EC2"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Manage the existing CloudOps security group

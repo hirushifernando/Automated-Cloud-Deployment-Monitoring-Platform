@@ -15,12 +15,12 @@ output "ecr_repository_url" {
 
 output "ec2_instance_id" {
   description = "Existing CloudOps EC2 instance ID"
-  value       = data.aws_instance.cloudops.id
+  value = aws_instance.cloudops.id
 }
 
 output "ec2_public_ip" {
   description = "Existing CloudOps EC2 public IP"
-  value       = data.aws_instance.cloudops.public_ip
+  value = aws_instance.cloudops.public_ip
 }
 
 output "security_group_id" {
