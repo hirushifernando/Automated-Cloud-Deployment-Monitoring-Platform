@@ -29,9 +29,43 @@ resource "aws_ecr_repository" "cloudops" {
 data "aws_instance" "cloudops" {
   instance_id = "i-0eba8e81414603f38"
 }
-# Find the existing CloudOps security group
-data "aws_security_group" "cloudops" {
-  id = "sg-09547a56cc9c8191e"
+# Manage the existing CloudOps security group
+resource "aws_security_group" "cloudops" {
+  name        = "CloudOpsSecurityGroup"
+  description = "Security group for CloudOps EC2 deployment"
+  vpc_id      = "vpc-05b83c4c89de50ec3"
+
+  ingress {
+    description = "CloudOps FastAPI access"
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["112.134.158.103/32"]
+  }
+
+  ingress {
+    description     = "SSH administration"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    cidr_blocks     = ["112.134.158.103/32"]
+    prefix_list_ids = ["pl-0e1bc5673b8a57acc"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  tags = {
+    Project = "CloudOps"
+  }
 }
 # Find the existing CloudOps EC2 IAM role
 data "aws_iam_role" "cloudops" {

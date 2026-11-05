@@ -24,13 +24,13 @@ output "ec2_public_ip" {
 }
 
 output "security_group_id" {
-  description = "Existing CloudOps security group ID"
-  value       = data.aws_security_group.cloudops.id
+  description = "Managed CloudOps security group ID"
+  value       = aws_security_group.cloudops.id
 }
 
 output "security_group_name" {
-  description = "Existing CloudOps security group name"
-  value       = data.aws_security_group.cloudops.name
+  description = "Managed CloudOps security group name"
+  value       = aws_security_group.cloudops.name
 }
 
 output "iam_role_name" {
