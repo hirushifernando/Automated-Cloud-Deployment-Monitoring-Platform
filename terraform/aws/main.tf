@@ -43,12 +43,19 @@ resource "aws_security_group" "cloudops" {
     cidr_blocks = ["112.134.158.103/32"]
   }
 
+   ingress {
+    description = "SSH administration"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["112.134.158.103/32"]
+  }
+
   ingress {
-    description     = "SSH administration"
+    description     = "EC2 Instance Connect"
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    cidr_blocks     = ["112.134.158.103/32"]
     prefix_list_ids = ["pl-0e1bc5673b8a57acc"]
   }
 
