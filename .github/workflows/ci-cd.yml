@@ -10,6 +10,14 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-southeast-2
+  ECR_REGISTRY: 109613847745.dkr.ecr.ap-southeast-2.amazonaws.com
+  ECR_REPOSITORY: cloudops-api
+
 jobs:
 
   test:
@@ -26,12 +34,10 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run tests
-        run: |
-          pytest -v
+        run: pytest -v
 
   build-and-push:
     name: Build and Push Docker Image
@@ -44,6 +50,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -53,7 +69,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Image
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -61,3 +77,5 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/cloudops-api:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/cloudops-api:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
