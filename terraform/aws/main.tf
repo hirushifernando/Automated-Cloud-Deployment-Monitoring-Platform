@@ -8,8 +8,22 @@ data "aws_vpc" "default" {
 }
 
 # Find the existing CloudOps ECR repository
-data "aws_ecr_repository" "cloudops" {
-  name = "cloudops-api"
+# Manage the existing CloudOps ECR repository
+resource "aws_ecr_repository" "cloudops" {
+  name                 = "cloudops-api"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 # Find the existing CloudOps EC2 instance
 data "aws_instance" "cloudops" {
